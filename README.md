@@ -1,5 +1,5 @@
 # IntegratedAbundance_model
-Data and code to run an integrated space use and occupancy model for Black-backed Woodpeckers
+Data and code to run an integrated space use and occupancy model for Black-backed Woodpeckers.
 
 This repository contains information and explanation for the data and code that accompany the following probject:
 Stillman, A.N., D.R. Kaschube, R.L. Wilkerson, R.B. Siegel, S.C. Sawyer, and M.W. Tingley. 2021. Incorporating pyrodiversity into 
