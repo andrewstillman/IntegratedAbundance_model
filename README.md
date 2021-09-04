@@ -12,7 +12,7 @@ an example using the Reading Fire (Lassen National Forest, 2012) and pre-made sp
 
 /IntegratedAbundance_model: data and code to run the integrated space use and occupancy model to predict Black-backed Woodpecker 
 abundance across an example fire (fire data contained in /ReadingFire_data). Predictions come from three component models: 
-(1) A model of the relationship between snag density and home range size. Available at https://github.com/mtingley/BBWO_abundance/tree/master/Model_HomeRange
+(1) A model of the relationship between snag density and home range size. Available at https://github.com/mtingley/BBWO_abundance/tree/master/Model_HomeRange.
 (2) A model to predict snag denstiy given remote sensing data.
 (3) A temporal auto-logistic occupancy model based on data from a long-term population survey.
 
