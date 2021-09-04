@@ -1,0 +1,57 @@
+#### ------------------------------------------------------------------------- ####
+#### Specification of Bayesian linear model in JAGS
+# Using R version 4.1.0 and JAGS version 4.3.0
+#### ------------------------------------------------------------------------- ####
+library(R2jags)
+
+#### Load data and organize for the model
+snag <- read.csv("Snag_model_data.csv", stringsAsFactors = T)
+
+
+#### --------------------- Run linear model ---------------------------------- ####
+
+snag.function <- function(){
+  
+  ## Prior distributions on parameters
+  b.0 ~ dnorm(0,0.01)
+  b.bs ~ dnorm(0,0.01)     
+  b.bs2 ~ dnorm(0,0.01)
+  b.precc ~ dnorm(0,0.01)
+  b.bs.precc ~ dnorm(0,0.01)
+  b.size ~ dnorm(0,0.01)
+  b.elev ~ dnorm(0,0.01)
+  b.lat ~ dnorm(0,0.01)
+  b.elevlat ~ dnorm(0,0.01)
+  tau ~ dgamma(0.001,0.001) 
+  sigma <- 1/sqrt(tau)
+  
+  ## Process model
+  for(i in 1:n.obs){
+    mu[i] <- b.0 + b.bs*BS[i] + b.bs2*BS[i]*BS[i] + b.precc*Precc[i] + b.bs.precc*BS[i]*Precc[i] + 
+             b.size*Size[i] + b.elev*Elev[i] + b.lat*Lat[i] + b.elevlat*Elev[i]*Lat[i]
+    
+    y[i] ~ dnorm(mu[i], tau)       # normal response
+    #y.pred[i] ~ dnorm(mu[i], tau)  # for posterior predictive checks
+  }
+}
+
+
+#### Set data for the model
+jags.list <- list(n.obs = nrow(snag), 
+                  BS = snag$S.BS30,
+                  Precc = snag$S.Precc30,
+                  Size = snag$WHRsize,
+                  Elev = snag$S.Elev,
+                  Lat = snag$S.Lat,
+                  y = snag$log_Snag_BA) # Field-measured basal area, log-transformed. 0's forced to 0.25. 
+
+params.save <- c("b.0","b.bs","b.bs2","b.precc","b.bs.precc","b.size","b.elev","b.lat","b.elevlat","sigma")
+
+snag.mod <- jags(data=jags.list,
+                      parameters.to.save=params.save, model.file=snag.function,
+                      n.chains=3, n.iter=5000, n.burnin=1000, n.thin=10)              
+
+snag.mod
+
+
+
