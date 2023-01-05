@@ -19,8 +19,7 @@
 
 #### Load required libraries and set folders
 library(raster)
-library(rgdal)
-library(rgeos)
+library(sf)
 
 mod.folder <- getwd()
 GIS.folder <- "../ReadingFire_data/"
@@ -32,7 +31,7 @@ GIS.folder <- "../ReadingFire_data/"
 #### ------------------ User inputs
 setwd(GIS.folder)
 fire_cc <- raster("Reading_cc.tif")
-fire_outline <- readOGR(dsn = getwd(), layer="fire_outline")
+fire_outline <- read_sf("fire_outline.shp")
 age <- 1                                  # Number of years post-fire           
 input_season <- "January 1 to August 15"  # Ignition date
                                           # Two options: 1) "January 1 to August 15" 2) "August 16 to December 31"
@@ -87,7 +86,7 @@ div.simp <- function(r, verbose=TRUE) {
 
 ## Run function. Takes a minute
 fire_pyro <- div.simp(fire_pyro) # returns D 
-fire_pyro <- 1/fire_pyro       # Inverse simpsons diversity
+fire_pyro <- 1/fire_pyro         # Inverse simpsons diversity
 
 
 #### Distance to patch edge
@@ -102,9 +101,10 @@ fire_patch <- distance(bi.fire_cc)             # takes a few seconds
 
 
 #### Latitude
-lat.pts <- SpatialPoints(coordinates(fire_cc), CRS(projection(fire_cc)))
-lat.pts <- spTransform(lat.pts, CRSobj = CRS(SRS_string = "EPSG:4269")) #NAD83 lat/long
-lat_coords <- coordinates(lat.pts)[,2]
+lat.pts <- as.data.frame(coordinates(fire_cc))
+lat.pts <- st_as_sf(lat.pts, coords = c("x","y"), crs=st_crs(fire_cc))
+lat.pts <- st_transform(lat.pts, crs = 4269)  # EPSG code for NAD83 lat/long
+lat_coords <- st_coordinates(lat.pts)[,2]
 fire_lat <- fire_cc
 values(fire_lat) <- lat_coords
 
@@ -230,7 +230,7 @@ if(input_season == "January 1 to August 15"){
 } else{
   ig_val <- 1
 }
-rm(input_season, input_size)
+
 
 #### Last thing -- indicator variable for medium or high severity patches
 cc30      <- values(fire_cc)[pix]
@@ -401,12 +401,19 @@ values(dens_mean)  <- dens_mean_val
 ## dens_mean is a raster giving predicted density across the fire area (pairs per pixel)
 plot(dens_mean)
 
+
 #### -------------------------------------------- 4 -------------------------------------------- ####
 
 
 #### ----------- Predict density uncertainty across the fire
+if(input_size >= 250000){
+  nsim <- 300
+} else if(input_size < 250000 & input_size >= 100000){
+  nsim <- 400
+} else{
+  nsim <- 500
+}
 
-nsim <- 200  # a small number to reduce storage size
 dens_sim <- matrix(nrow = length(pix), ncol = nsim)  # output file
 
 start.time<-Sys.time()
